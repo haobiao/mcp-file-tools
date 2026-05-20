@@ -527,7 +527,7 @@ Detect, strip, or add Unicode BOM (Byte Order Mark). UTF-8 BOM breaks PHP/shell 
 
 ### list_encodings
 
-Returns all 22 supported encodings with name, aliases, and description.
+Returns all 24 supported encodings with name, aliases, and description.
 
 ### list_allowed_directories
 
@@ -540,6 +540,8 @@ Returns directories the server is allowed to access. If empty, add paths as args
 | utf-8 | utf8, ascii | Unicode, no conversion |
 | utf-16-le | utf16le, utf-16le | Unicode UTF-16 Little Endian |
 | utf-16-be | utf16be, utf-16be | Unicode UTF-16 Big Endian |
+| gbk | gb2312, gb-2312, cp936 | Chinese Simplified (GB2312/GBK) |
+| gb18030 | gb-18030 | Chinese Simplified (GB18030, superset of GBK) |
 | windows-1251 | cp1251 | Windows Cyrillic |
 | koi8-r | koi8r | Russian Cyrillic (Unix/Linux) |
 | koi8-u | koi8u | Ukrainian Cyrillic (Unix/Linux) |
