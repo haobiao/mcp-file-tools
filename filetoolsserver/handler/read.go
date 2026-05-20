@@ -226,12 +226,13 @@ func decodeContent(data []byte, encResult encodingResult) (string, error) {
 
 // applyOffsetLimit applies offset and limit to select a range of lines.
 // Offset is 1-indexed (like line numbers). Returns content, startLine, endLine.
-// Preserves original line endings (CRLF/LF).
+// Preserves original line endings (CRLF/LF) but does not add trailing newline
+// at the end of the result (consistent with the original behavior).
 func applyOffsetLimit(content string, offset, limit *int) (string, int, int) {
 	// Split content while preserving line ending information
 	type lineWithEnding struct {
 		text   string
-		ending string // "\r\n", "\n", or "" for last line
+		ending string // "\r\n", "\n", or "" for last line without newline
 	}
 
 	var lines []lineWithEnding
@@ -247,7 +248,7 @@ func applyOffsetLimit(content string, offset, limit *int) (string, int, int) {
 		}
 	}
 	// Add last line (even if it doesn't have a trailing newline)
-	if start < len(content) || len(lines) == 0 {
+	if start <= len(content) {
 		lines = append(lines, lineWithEnding{text: content[start:], ending: ""})
 	}
 
@@ -274,10 +275,13 @@ func applyOffsetLimit(content string, offset, limit *int) (string, int, int) {
 	selectedLines := lines[startIdx:endIdx]
 
 	// Reconstruct content with original line endings
+	// Important: don't add trailing newline after the last line
 	var result strings.Builder
 	for i, line := range selectedLines {
 		result.WriteString(line.text)
-		if i < len(selectedLines)-1 || line.ending != "" {
+		// Only add line ending for lines that originally had one (not the very last line)
+		// and not for the last line in our selection
+		if i < len(selectedLines)-1 && line.ending != "" {
 			result.WriteString(line.ending)
 		}
 	}
