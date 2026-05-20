@@ -49,8 +49,8 @@ changelog:
 
 release:
   github:
-    owner: dimitar-grigorov
-    name: mcp-file-tools
+    owner: ${GITHUB_REPOSITORY_OWNER}
+    name: ${GITHUB_REPOSITORY_NAME}
 
 # MCP Registry publishing
 # Disabled: MCP registry now requires fileSha256 checksums which GoReleaser doesn't support yet
