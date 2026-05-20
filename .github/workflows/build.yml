@@ -15,6 +15,7 @@ on:
       - 'LICENSE'
       - '.gitignore'
       - 'server.json'
+  workflow_dispatch:
 
 jobs:
   build:
