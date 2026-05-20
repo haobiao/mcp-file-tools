@@ -58,8 +58,7 @@ func (h *Handler) HandleReadTextFile(ctx context.Context, req *mcp.CallToolReque
 
 	var startLine, endLine int
 	if input.Offset != nil || input.Limit != nil {
-		lines := strings.Split(content, "\n")
-		content, startLine, endLine = applyOffsetLimit(lines, input.Offset, input.Limit)
+		content, startLine, endLine = applyOffsetLimit(content, input.Offset, input.Limit)
 	} else {
 		startLine = 1
 		endLine = totalLines
@@ -227,8 +226,31 @@ func decodeContent(data []byte, encResult encodingResult) (string, error) {
 
 // applyOffsetLimit applies offset and limit to select a range of lines.
 // Offset is 1-indexed (like line numbers). Returns content, startLine, endLine.
-// Negative values are treated as not provided.
-func applyOffsetLimit(lines []string, offset, limit *int) (string, int, int) {
+// Preserves original line endings (CRLF/LF).
+func applyOffsetLimit(content string, offset, limit *int) (string, int, int) {
+	// Split content while preserving line ending information
+	type lineWithEnding struct {
+		text   string
+		ending string // "\r\n", "\n", or "" for last line
+	}
+
+	var lines []lineWithEnding
+	start := 0
+	for i := 0; i < len(content); i++ {
+		if content[i] == '\r' && i+1 < len(content) && content[i+1] == '\n' {
+			lines = append(lines, lineWithEnding{text: content[start:i], ending: "\r\n"})
+			start = i + 2
+			i++ // skip \n
+		} else if content[i] == '\n' {
+			lines = append(lines, lineWithEnding{text: content[start:i], ending: "\n"})
+			start = i + 1
+		}
+	}
+	// Add last line (even if it doesn't have a trailing newline)
+	if start < len(content) || len(lines) == 0 {
+		lines = append(lines, lineWithEnding{text: content[start:], ending: ""})
+	}
+
 	totalLines := len(lines)
 
 	// Default offset is 1 (first line)
@@ -250,5 +272,15 @@ func applyOffsetLimit(lines []string, offset, limit *int) (string, int, int) {
 	}
 
 	selectedLines := lines[startIdx:endIdx]
-	return strings.Join(selectedLines, "\n"), startIdx + 1, endIdx
+
+	// Reconstruct content with original line endings
+	var result strings.Builder
+	for i, line := range selectedLines {
+		result.WriteString(line.text)
+		if i < len(selectedLines)-1 || line.ending != "" {
+			result.WriteString(line.ending)
+		}
+	}
+
+	return result.String(), startIdx + 1, endIdx
 }
